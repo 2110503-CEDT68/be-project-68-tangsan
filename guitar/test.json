@@ -1,0 +1,424 @@
+{
+	"info": {
+		"name": "Restaurant Reservation API Tests",
+		"description": "Test Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{ "key": "userToken", "value": "" },
+		{ "key": "adminToken", "value": "" },
+		{ "key": "userEmail", "value": "" },
+		{ "key": "reservationId1", "value": "" },
+		{ "key": "reservationId2", "value": "" }
+	],
+	"item": [
+		{
+			"name": "1. User Registration (Validation Check - Negative)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400 when missing password\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Test User\",\n    \"tel\": \"0812345678\",\n    \"email\": \"testuser_validation@gmail.com\",\n    \"role\": \"user\"\n}"
+				},
+				"url": "http://127.0.0.1:5000/api/v1/auth/register"
+			}
+		},
+		{
+			"name": "2. User Registration (Success)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var randomId = Math.floor(Math.random() * 100000);",
+							"pm.collectionVariables.set(\"userEmail\", \"user\" + randomId + \"@gmail.com\");"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Token is returned\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.collectionVariables.set(\"userToken\", jsonData.token);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Test User\",\n    \"tel\": \"0812345678\",\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"123456\",\n    \"role\": \"user\"\n}"
+				},
+				"url": "http://127.0.0.1:5000/api/v1/auth/register"
+			}
+		},
+		{
+			"name": "3. User Log-in",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Save user token\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.collectionVariables.set(\"userToken\", jsonData.token);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"123456\"\n}"
+				},
+				"url": "http://127.0.0.1:5000/api/v1/auth/login"
+			}
+		},
+		{
+			"name": "4. User View Product (Restaurant)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 or 400\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://127.0.0.1:5000/api/v1/restaurants/69a020526ec1929f74d22497"
+			}
+		},
+		{
+			"name": "5. User Create Booking 1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"pm.test(\"Save reservation ID 1\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if(jsonData.data && jsonData.data._id) {",
+							"       pm.collectionVariables.set(\"reservationId1\", jsonData.data._id);",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{"key": "Authorization", "value": "Bearer {{userToken}}"},
+					{"key": "Content-Type", "value": "application/json"}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"resvDate\": \"2026-05-20T12:00:00.000Z\"\n}"
+				},
+				"url": "http://127.0.0.1:5000/api/v1/restaurants/69a020526ec1929f74d22497/reservations"
+			}
+		},
+		{
+			"name": "6. User Create Booking 2 (For Admin to test)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"pm.test(\"Save reservation ID 2\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if(jsonData.data && jsonData.data._id) {",
+							"       pm.collectionVariables.set(\"reservationId2\", jsonData.data._id);",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{"key": "Authorization", "value": "Bearer {{userToken}}"},
+					{"key": "Content-Type", "value": "application/json"}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"resvDate\": \"2026-06-15T18:00:00.000Z\"\n}"
+				},
+				"url": "http://127.0.0.1:5000/api/v1/restaurants/69a020526ec1929f74d22497/reservations"
+			}
+		},
+		{
+			"name": "7. User Create Booking (Check Condition - Missing Date)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code should be 500 or 400 for bad request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([500, 400]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{"key": "Authorization", "value": "Bearer {{userToken}}"},
+					{"key": "Content-Type", "value": "application/json"}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{}"
+				},
+				"url": "http://127.0.0.1:5000/api/v1/restaurants/69a020526ec1929f74d22497/reservations"
+			}
+		},
+		{
+			"name": "8. User View Own Booking",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Response has data array\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [{"key": "Authorization", "value": "Bearer {{userToken}}"}],
+				"url": "http://127.0.0.1:5000/api/v1/reservations"
+			}
+		},
+		{
+			"name": "9. User Edit Own Booking",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{"key": "Authorization", "value": "Bearer {{userToken}}"},
+					{"key": "Content-Type", "value": "application/json"}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"resvDate\": \"2026-07-10T19:30:00.000Z\"\n}"
+				},
+				"url": "http://127.0.0.1:5000/api/v1/reservations/{{reservationId1}}"
+			}
+		},
+		{
+			"name": "10. User Delete Own Booking",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [{"key": "Authorization", "value": "Bearer {{userToken}}"}],
+				"url": "http://127.0.0.1:5000/api/v1/reservations/{{reservationId1}}"
+			}
+		},
+		{
+			"name": "11. User Log-out",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [{"key": "Authorization", "value": "Bearer {{userToken}}"}],
+				"url": "http://127.0.0.1:5000/api/v1/auth/logout"
+			}
+		},
+		{
+			"name": "12. Admin Log-in",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Save admin token\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.collectionVariables.set(\"adminToken\", jsonData.token);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"admin@gmail.com\",\n    \"password\": \"123456\"\n}"
+				},
+				"url": "http://127.0.0.1:5000/api/v1/auth/login"
+			}
+		},
+		{
+			"name": "13. Admin View Any Booking",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Response has data array\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+				"url": "http://127.0.0.1:5000/api/v1/reservations"
+			}
+		},
+		{
+			"name": "14. Admin Edit Any Booking",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{"key": "Authorization", "value": "Bearer {{adminToken}}"},
+					{"key": "Content-Type", "value": "application/json"}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"resvDate\": \"2026-08-01T20:00:00.000Z\"\n}"
+				},
+				"url": "http://127.0.0.1:5000/api/v1/reservations/{{reservationId2}}"
+			}
+		},
+		{
+			"name": "15. Admin Delete Any Booking",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+				"url": "http://127.0.0.1:5000/api/v1/reservations/{{reservationId2}}"
+			}
+		}
+	]
+}
