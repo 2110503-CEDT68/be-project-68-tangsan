@@ -3,6 +3,10 @@ const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const cors = require('cors');
+const mongoSanitize = require('@exortek/express-mongo-sanitize');
+const helmet = require('helmet');
+const { xss } = require('express-xss-sanitizer');
+const hpp = require('hpp');
 
 // Load env vars
 dotenv.config({ path: './config/config.env' });
@@ -19,11 +23,13 @@ const app = express();
 
 // Body parser
 app.use(express.json());
-// Cookie parser
 app.use(cookieParser());
-// Enable CORS
 app.use(cors());
-
+app.use(mongoSanitize()); 
+app.use(helmet());        
+app.use(xss());           
+app.use(hpp());
+           
 // Mount routers
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/restaurants', restaurants);
