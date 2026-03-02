@@ -16,6 +16,7 @@ RestaurantSchema.pre('deleteOne', { document: true, query: false }, async functi
     await this.model('Reservation').deleteMany({ restaurant: this._id });
 });
 
+// Reverse populate with virtuals
 RestaurantSchema.virtual('reservations', {
     ref: 'Reservation',
     localField: '_id',
