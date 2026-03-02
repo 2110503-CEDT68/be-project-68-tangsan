@@ -18,7 +18,7 @@ connectDB();
 
 const auth = require('./routes/auth');
 const restaurants = require('./routes/restaurants.js');
-
+const reservations = require('./routes/reservations');
 const app = express();
 
 const limiter = rateLimit({
@@ -37,6 +37,7 @@ app.use(limiter);
 
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/restaurants', restaurants);
+app.use('/api/v1/reservations', reservations);
 
 const PORT = process.env.PORT || 5000;
 
