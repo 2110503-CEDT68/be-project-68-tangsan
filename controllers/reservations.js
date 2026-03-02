@@ -103,6 +103,43 @@ exports.addReservation = async (req, res, next) => {
             });
         }
 
+        // Ensure time is provided
+        if (!req.body.time) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide reservation time"
+            });
+        }
+
+        // Convert HH:MM to minutes
+        const convertToMinutes = (timeStr) => {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours * 60 + minutes;
+        };
+
+        const reserveMinutes = convertToMinutes(req.body.time);
+        const openMinutes = convertToMinutes(restaurant.opentime);
+        const closeMinutes = convertToMinutes(restaurant.closetime);
+        
+        // Check opening hours
+        if (openMinutes <= closeMinutes) {
+            // Normal Day
+            if (reserveMinutes < openMinutes || reserveMinutes >= closeMinutes) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Reservation time must be between ${restaurant.opentime} and ${restaurant.closetime}`
+                });
+            }
+        } else {
+            // Over night
+            if (reserveMinutes < openMinutes && reserveMinutes >= closeMinutes) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Reservation time must be between ${restaurant.opentime} and ${restaurant.closetime}`
+                });
+            }
+        }
+
         //add user Id to req.body
         req.body.user = req.user.id;
 
@@ -159,6 +196,52 @@ exports.updateReservation = async (req, res, next) => {
                 success: false,
                 message: `User ${req.user.id} is not authorized to update this reservation`
             });
+        }
+
+        const restaurant = await Restaurant.findById(reservation.restaurant);
+
+        if (!restaurant) {
+            return res.status(404).json({
+                success: false,
+                message: `Restaurant not found`
+            });
+        }
+
+        // Ensure time is provided
+        if (!req.body.time) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide reservation time"
+            });
+        }
+
+        // Convert HH:MM to minutes
+        const convertToMinutes = (timeStr) => {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours * 60 + minutes;
+        };
+
+        const reserveMinutes = convertToMinutes(req.body.time);
+        const openMinutes = convertToMinutes(restaurant.opentime);
+        const closeMinutes = convertToMinutes(restaurant.closetime);
+
+        // Check opening hours
+        if (openMinutes <= closeMinutes) {
+            // Normal Day
+            if (reserveMinutes < openMinutes || reserveMinutes >= closeMinutes) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Reservation time must be between ${restaurant.opentime} and ${restaurant.closetime}`
+                });
+            }
+        } else {
+            // Over Night
+            if (reserveMinutes < openMinutes && reserveMinutes >= closeMinutes) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Reservation time must be between ${restaurant.opentime} and ${restaurant.closetime}`
+                });
+            }
         }
 
         reservation = await Reservation.findByIdAndUpdate(

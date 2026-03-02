@@ -13,8 +13,7 @@ exports.getRestaurants= async (req, res,next)=>{
       match => `$${match}`
     );
 
-    query = Restaurant.find(JSON.parse(queryStr));
-    //.populate('reservations');
+    query = Restaurant.find(JSON.parse(queryStr)).populate('reservations');
 
     // Select Fields
     if (req.query.select) {
